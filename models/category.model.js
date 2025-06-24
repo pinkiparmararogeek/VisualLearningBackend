@@ -15,10 +15,10 @@ class Category{
   }
 
 
-  static async addCategory({ category_name,category_icon }) {
+  static async addCategory({ category_name,icon }) {
     const [result] = await db.query(
       `INSERT INTO tbl_categories (category_name,category_icon) VALUES (?, ?)`,
-      [category_name,category_icon]
+      [category_name,icon]
     );
     return result.insertId;
   }

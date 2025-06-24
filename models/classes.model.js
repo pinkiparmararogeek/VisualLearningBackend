@@ -1,15 +1,13 @@
 const db=require("../database/db")
 
 class Classes{
-
-
     static async findClass({category_id,class_name}){
         const [rows]=await db.query(`select * from tbl_classes where class_name=? AND category_id_FK=?`,[class_name,category_id]);
         return rows[0];
     } 
 
-static async addClass({category_id,class_name,class_icon}){
-    const [insert]=await db.query(`insert into tbl_classes (category_id_FK,class_name,class_icon) VALUES (?,?,?)`,[category_id,class_name,class_icon])
+static async addClass({category_id,class_name,icon}){
+    const [insert]=await db.query(`insert into tbl_classes (category_id_FK,class_name,class_icon) VALUES (?,?,?)`,[category_id,class_name,icon])
     return insert.insertId;
 }
 

@@ -3,12 +3,16 @@ const router = express.Router();
 const categoryController = require("../controllers/category.controller");
 const { authenticateUser } = require('../middlewares/auth.middleware');
 
+const multerErrorHandler = require("../middlewares/multerErrorHandler");
 
 //API for get category List
 router.get('/',authenticateUser,categoryController.getCategoryList)
 
-//API for add new category
-router.post("/",authenticateUser,categoryController.addCategory)
+router.post(
+  "/",authenticateUser,
+    multerErrorHandler,         
+  categoryController.addCategory
+);
 
 
 //delete category

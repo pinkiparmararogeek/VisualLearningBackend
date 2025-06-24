@@ -5,14 +5,14 @@ const { authenticateUser } = require('../middlewares/auth.middleware');
 
 
  //API for add subject by class id
- router.post('/',chapterController.addChapterBySubject)
+ router.post('/',authenticateUser,chapterController.addChapterBySubject)
 
 // //API for add new class
 // router.post("/",authenticateUser,classController.addClass)
 
 
 //delete chapter
- router.delete("/:chapter_id",chapterController.deleteChapter);
+ router.delete("/:chapter_id",authenticateUser,chapterController.deleteChapter);
 
 
 

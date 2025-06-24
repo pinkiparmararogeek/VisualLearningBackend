@@ -13,10 +13,10 @@ static async getUserList(){
 
 
 
-   static async registerUser({ full_name, mobile, email, password,jwt_token }) {
+   static async registerUser({ full_name, mobile, email, password,provider_id,signIn_method,jwt_token,referral_code }) {
     const [result] = await db.query(
-      'INSERT INTO tbl_users (full_name, mobile, email, password,jwt_token) VALUES (?, ?, ?, ?,?)',
-      [full_name, mobile, email, password,jwt_token]
+      'INSERT INTO tbl_users (full_name, mobile, email, password,provider_id,signIn_method,jwt_token,referral_code) VALUES (?, ?, ?, ?,?,?,?,?)',
+      [full_name, mobile, email, password,provider_id,signIn_method,jwt_token,referral_code]
     );
     return result.insertId;
   }
@@ -31,11 +31,12 @@ return rows.affectedRows>0
   }
 
 
-  static async updatePassword(user_id, newPassword) {
+  static async updatePassword(email, newPassword) {
  const [rows]= await db.query(
-    'UPDATE tbl_users SET password = ? WHERE user_id_PK = ?',
-    [newPassword, user_id]
+    'UPDATE tbl_users SET password = ? WHERE email = ?',
+    [newPassword, email]
   );
+  console.log("rows.affectedRows>0",rows.affectedRows>0)
   return rows.affectedRows>0
 }
 }

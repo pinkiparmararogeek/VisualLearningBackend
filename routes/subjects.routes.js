@@ -5,13 +5,13 @@ const { authenticateUser } = require('../middlewares/auth.middleware');
 
 
 //API for get subject List by class name
- router.get('/:class_name',subjectController.getSubjectsByClassName)
+ router.get('/:class_name',authenticateUser,subjectController.getSubjectsByClassName)
 
 //Add new subject with class_id
-router.post("/",subjectController.addSubject)
+router.post("/",authenticateUser,subjectController.addSubject)
 
 //delete subject
-router.delete("/:subject_id",subjectController.deleteSubject)
+router.delete("/:subject_id",authenticateUser,subjectController.deleteSubject)
 
 
 

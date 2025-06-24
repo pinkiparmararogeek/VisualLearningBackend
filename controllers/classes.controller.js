@@ -1,29 +1,38 @@
 const Class=require('../models/classes.model');
+require('dotenv').config();
 
+exports.addClass = async (req, res) => {
+  try {
+    const { class_name,category_id } = req.body;
+    const icon = req.file?.filename;
 
-exports.addClass=async(req,res)=>{
-try{
-const{category_id,class_name,class_icon}=req.body;
+    if (!class_name || !icon||!category_id) {
+      return res.status(400).json({
+        status: false,
+        message: "class_name and icon,category_id are required."
+      });
+    }
 
-if(!category_id||!class_name||!class_icon){
-    return res.status(400).json({status:false,message:"category_id,class_name,class_icon is required."})
-}
-const isClassExist=await  Class.findClass({category_id,class_name})
+   const isClassExist=await  Class.findClass({category_id,class_name,category_id})
 
 if(isClassExist){
     return res.status(400).json({status:false,message:"This class is already exist for this category."})
 }
-const addClass=await Class.addClass({category_id,class_name,class_icon})
+const addClass=await Class.addClass({category_id,class_name,icon})
 if(!addClass){
     return res.status(400).json({status:false,message:"Class not added."})
 }
 return res.status(200).json({status:true,message:"Class added successfully.", class_id: addClass})
 
-}
-catch(err){
-    return res.status(500).json({status:false,message:err.message})
-}
-}
+  } catch (err) {
+    return res.status(500).json({
+      status: false,
+      message: err.message
+    });
+  }
+};
+
+
 
 
 exports.getClassesByCategory=async(req,res)=>{
@@ -34,7 +43,16 @@ const classList=await  Class.getClassListByCategory(category_id)
 if(!classList){
     return res.status(400).json({status:false,message:"There is no class awailable for this category"})
 }
-return res.status(200).json({status:true,message:"Class list found for This category",data:classList})
+
+
+
+ const baseUrl = `${process.env.BASE_URL}/uploads/icons/`;
+    const updatedList = classList.map(category => ({
+      ...category,
+      class_icon: baseUrl + category.class_icon
+    }));
+
+return res.status(200).json({status:true,message:"Class list found for This category",data:updatedList})
     }
     catch(err){
         return res.status(500).json({status:false,message:err.message})
