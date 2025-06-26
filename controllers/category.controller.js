@@ -13,10 +13,25 @@ exports.getCategoryList=async(req,res)=>{
       ...category,
       category_icon: baseUrl + category.category_icon
     }));
+
+    const bannerImages=await Category.bannerImagesList()
+
+    if(!bannerImages){
+      return res.status(400).json({status:false,message:"Banner images not found."})
+    }
+
+
+     const baseUrl2 = `${process.env.BASE_URL}/uploads/banner-images/`;
+    const updatedBannerList = bannerImages.map(banner => ({
+      ...banner,
+      image_url: baseUrl2 + banner.image_url
+    }));
+
     return res.status(200).json({
       status: true,
       message: "Category list founded successfully.",
-      Categories: updatedList
+      Categories: updatedList,
+      BannerImages:updatedBannerList
     });
     }catch(err){
         return res.status(500).json({status:false,message:err.message})

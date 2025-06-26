@@ -1,6 +1,6 @@
 const Class=require('../models/classes.model');
 require('dotenv').config();
-
+require('dotenv').config();
 exports.addClass = async (req, res) => {
   try {
     const { class_name,category_id } = req.body;
@@ -35,29 +35,29 @@ return res.status(200).json({status:true,message:"Class added successfully.", cl
 
 
 
-exports.getClassesByCategory=async(req,res)=>{
-    try{
-        const{category_id}=req.params;
-const classList=await  Class.getClassListByCategory(category_id)
+// exports.getClassesByCategory=async(req,res)=>{
+//     try{
+//         const{category_id}=req.params;
+// const classList=await  Class.getClassListByCategory(category_id)
 
-if(!classList){
-    return res.status(400).json({status:false,message:"There is no class awailable for this category"})
-}
+// if(!classList){
+//     return res.status(400).json({status:false,message:"There is no class awailable for this category"})
+// }
 
 
 
- const baseUrl = `${process.env.BASE_URL}/uploads/icons/`;
-    const updatedList = classList.map(category => ({
-      ...category,
-      class_icon: baseUrl + category.class_icon
-    }));
+//  const baseUrl = `${process.env.BASE_URL}/uploads/icons/`;
+//     const updatedList = classList.map(category => ({
+//       ...category,
+//       class_icon: baseUrl + category.class_icon
+//     }));
 
-return res.status(200).json({status:true,message:"Class list found for This category",data:updatedList})
-    }
-    catch(err){
-        return res.status(500).json({status:false,message:err.message})
-    }
-}
+// return res.status(200).json({status:true,message:"Class list found for This category",data:updatedList})
+//     }
+//     catch(err){
+//         return res.status(500).json({status:false,message:err.message})
+//     }
+// }
 
 exports.deleteClass=async(req,res)=>{
     try{
@@ -88,3 +88,23 @@ exports.getSubjectsAndChaptersByClass = async (req, res) => {
     res.status(500).json({ error: "Something went wrong" });
   }
 };
+
+
+exports.getClassList=async(req,res)=>{
+  try{
+const getClassList=await Class.classList();
+if(!getClassList){
+  return res.status(400).json({status:false,message:"Class list not found"})
+}
+
+
+const baseUrl = `${process.env.BASE_URL}/uploads/icons/`;
+    const updatedList = getClassList.map(category => ({
+      ...category,
+      class_icon: baseUrl + category.class_icon
+    }));
+return res.status(200).json({status:true,message:"Class list found successfully",data:updatedList})
+  }catch(err){
+    return res.status(500).json({status:false,message:err.message})
+  }
+}

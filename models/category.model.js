@@ -32,6 +32,12 @@ static async deleteCategory(id){
 }
 
 
+//get all banner image list
+static async bannerImagesList(){
+  const [rows]=await db.query(`SELECT * from tbl_banner_images where is_active=1`);
+  return rows;
+}
+
 }
 
 module.exports=Category;

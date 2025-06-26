@@ -25,6 +25,13 @@ static async getOrganizationDetail(organization_name = 'Visual Learning') {
   return rows[0];
 }
 
+
+static async uploadImage({title,imageUrl}){
+  const [rows]=await db.query(`INSERT into tbl_banner_images(	image_url,title) value(?,?)`,[title,imageUrl]);
+  return rows.insertId
+};
+
+
 }
 
 module.exports=Organization;

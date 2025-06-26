@@ -6,19 +6,20 @@ class Classes{
         return rows[0];
     } 
 
+
+
+
+
+    static async classList(){
+      const [rows]=await db.query(`SELECT * FROM tbl_classes ORDER BY sort_order ASC;`);
+      return rows;
+    }
 static async addClass({category_id,class_name,icon}){
     const [insert]=await db.query(`insert into tbl_classes (category_id_FK,class_name,class_icon) VALUES (?,?,?)`,[category_id,class_name,icon])
     return insert.insertId;
 }
 
 
-static async getClassListByCategory(category_id) {
-  const [rows] = await db.query(
-    `SELECT * FROM tbl_classes WHERE category_id_FK = ?`,
-    [category_id]
-  );
-  return rows;
-}
 
 static async deleteClass(class_id) {
   const [result] = await db.query(

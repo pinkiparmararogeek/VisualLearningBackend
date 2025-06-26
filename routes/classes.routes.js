@@ -4,8 +4,9 @@ const classController = require("../controllers/classes.controller");
 const { authenticateUser } = require('../middlewares/auth.middleware');
 
 const multerErrorHandler = require("../middlewares/multerErrorHandler");
+
 //API for get class List by category
-router.get('/:category_id',authenticateUser,classController.getClassesByCategory)
+router.get('/',classController.getClassList)
 
 //API for add new class
 router.post("/",authenticateUser,multerErrorHandler,classController.addClass)

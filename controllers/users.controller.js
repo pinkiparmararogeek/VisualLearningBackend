@@ -60,6 +60,7 @@ exports.registerUser=async(req,res)=>{
         full_name,
         email,
         mobile,
+        is_subscribe:1,
         token
       },
     });
@@ -108,6 +109,8 @@ return res.status(200).json({
         full_name: user.full_name,
         email: user.email,
         mobile: user.mobile,
+        is_subscribe:user.is_subscribe,
+        expiry_date:user.expiry_date,
         token:token
       }
     });
@@ -147,6 +150,8 @@ if(!full_name||!email||!provider_id||!signIn_method){
           full_name: user.full_name,
           email: user.email,
           mobile: user.mobile,
+          is_subscribe:user.is_subscribe,
+          expiry_date:user.expiry_date,
           token: token
         }
       });
@@ -171,6 +176,8 @@ if(!full_name||!email||!provider_id||!signIn_method){
         full_name: full_name,
         email,
         mobile: null,
+        is_subscribe:user.is_subscribe,
+        expiry_date:user.expiry_date,
         token: token
       }
     });
