@@ -11,7 +11,10 @@ router.get('/',authenticateUser,organizationController.getOrganizationDetail)
 
 //upload banner images
 router.post('/upload-banner',authenticateUser,upload.single("banner-image"),organizationController.uploadBannerImage)
+//get banner images
+router.get('/banner-images',authenticateUser,organizationController.getBannerImages)
 
-
+//delete banner image
+router.delete('/delete-banner-image/:image_id',authenticateUser,organizationController.deletebannerImage)
 
 module.exports=router;

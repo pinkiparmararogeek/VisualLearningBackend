@@ -9,8 +9,8 @@ static async isQuizExist(quizTitle){
 }
 
 
-static async insertQuiz({quizTitle,chapterId,is_paid}){
-    const [result] = await db.query(`INSERT INTO tbl_quizzes (title,chapter_id_FK,is_paid) VALUES (?,?,?)`, [quizTitle,chapterId,is_paid]);
+static async insertQuiz({quizTitle,chapterId,is_paid,is_notify}){
+    const [result] = await db.query(`INSERT INTO tbl_quizzes (title,chapter_id_FK,is_paid,is_notify) VALUES (?,?,?,?)`, [quizTitle,chapterId,is_paid,is_notify]);
     return result.insertId;
 }
 
@@ -93,10 +93,10 @@ static async getClassById(classId){
 
 
 
-static async adNotifictionInDb({ className, subjectName, chapterName, quizTitle }) {
+static async adNotifictionInDb({title,description,quizId}) {
   const [rows] = await db.query(
-    `INSERT INTO tbl_notifications (class_name, subject_name, chapter_name, content_title, content_type) VALUES (?, ?, ?, ?, ?)`,
-    [className, subjectName, chapterName, quizTitle,'Quiz']
+    `INSERT INTO tbl_notifications (title,description,content_id,content_type) VALUES (?, ?, ?, ?)`,
+    [title,description,quizId,4] 
   );
   return rows.insertId > 0;
 }

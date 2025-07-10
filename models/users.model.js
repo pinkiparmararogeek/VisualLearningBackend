@@ -1,9 +1,6 @@
 const db = require('../database/db');
-
+require("dotenv").config();
 class Users{
-
-
-
 static async getUserList({ limit, offset }) {
   const [users] = await db.query(
     `SELECT 
@@ -18,7 +15,6 @@ static async getUserList({ limit, offset }) {
   );
   return users;
 }
-
 static async findeReferredById(referred_code){
   const [rows]=await db.query(`SELECT * from tbl_users where referral_code=?`,[referred_code]);
  return rows.length > 0 ? rows[0].user_id_PK : null;
@@ -27,8 +23,6 @@ static async getUserCount() {
   const [rows] = await db.query('SELECT COUNT(*) AS count FROM tbl_users');
   return rows[0].count;
 }
-
-
 static async getTotalActiveUser(){
   const [rows]=await db.query(`SELECT COUNT(*) AS count from tbl_users where is_active=1`)
   return rows[0].count;
@@ -37,9 +31,6 @@ static async getTotalActiveUser(){
     const [rows] = await db.query('SELECT * FROM tbl_users WHERE email = ?', [email]);
     return rows.length > 0 ? rows[0] : null;
   }
-
-
-
    static async registerUser({ full_name, mobile, email, password,provider_id,signIn_method,jwt_token,referred_by_Id ,referral_code}) {
     const [result] = await db.query(
       'INSERT INTO tbl_users (full_name, mobile, email, password,provider_id,signIn_method,jwt_token,referred_by_Id,referral_code) VALUES (?, ?, ?, ?,?,?,?,?,?)',
@@ -47,7 +38,6 @@ static async getTotalActiveUser(){
     );
     return result.insertId;
   }
-
    static async updateToken({user_id,token}) {
    
   const [rows]=  await db.query(
@@ -56,8 +46,6 @@ static async getTotalActiveUser(){
     );
 return rows.affectedRows>0
   }
-
-
   static async updatePassword(email, newPassword) {
  const [rows]= await db.query(
     'UPDATE tbl_users SET password = ? WHERE email = ?',
@@ -66,8 +54,6 @@ return rows.affectedRows>0
   console.log("rows.affectedRows>0",rows.affectedRows>0)
   return rows.affectedRows>0
 }
-
-
 // logout user by expiring JWT token
 static async logOutUser(token) {
   const [expire] = await db.query(
@@ -105,9 +91,6 @@ static async extendSubscription(userId) {
     [formattedExpiry, userId]
   );
 }
-
-
-
 static async extendSubscriptionPlanAfterPlanPurchase(userId) {
   // Get current expiry_date for the user
   const [rows] = await db.query(
@@ -129,22 +112,89 @@ static async extendSubscriptionPlanAfterPlanPurchase(userId) {
   );
  return result.affectedRows > 0;
 }
-
 // Get user by ID
 static async getUserById(user_id) {
   const [rows] = await db.query(`SELECT * FROM tbl_users WHERE user_id_PK = ?`, [user_id]);
   return rows.length > 0 ? rows[0] : null;
 }
-
-
 static async addFcmToken({user_id, fcm_token}){
   const [rows]=await db.query(`UPDATE tbl_users SET fcm_token=? where user_id_PK=?`,[fcm_token,user_id]);
    return rows.affectedRows > 0;
 }
+static async getNotificationList() {
+  const baseVideoUrl = `${process.env.BASE_URL}/uploads/videos/`;
+  const baseThumbnailUrl = `${process.env.BASE_URL}/uploads/thumbnails/`;
+  const baseNoteUrl = `${process.env.BASE_URL}/uploads/notes/`;
+  const [notifications] = await db.query(`SELECT * FROM tbl_notifications`);
+  for (const notification of notifications) {
+    const contentId = notification.content_id;
+    const contentType = notification.content_type;
+    let tableName = "";
+    let fileColumn = "";
+    let content_id_PK = "";
+    switch (contentType) {
+      case "1": // Chapter video
+        tableName = "tbl_chapter_videos";
+        fileColumn = "video_url_hindi, video_url_english, thumbnail_url, video_type";
+        content_id_PK = "video_id_PK";
+        break;
+      case "2": // Notes
+        tableName = "tbl_chapter_notes";
+        fileColumn = "pdf_url";
+        content_id_PK = "note_id_PK";
+        break;
+      case "3": // Test papers
+        tableName = "tbl_chapter_testpapers";
+        fileColumn = "pdf_url";
+        content_id_PK = "testpaper_id_PK";
+        break;
+      case "4": // Quizzes
+        tableName = "tbl_quizzes";
+        fileColumn = "title,quiz_id_PK "; // or any other relevant field
+        content_id_PK = "quiz_id_PK";
+        break;
+      default:
+        notification.content_url = null;
+        continue;
+    }
+    const [contentRows] = await db.query(
+      `SELECT ${fileColumn} FROM ${tableName} WHERE ${content_id_PK} = ?`,
+      [contentId]
+    );
+    if (contentRows.length > 0) {
+      const content = contentRows[0];
+      if (contentType === "1") {
+        notification.video_url_hindi =
+          content.video_type == 1
+            ? baseVideoUrl + content.video_url_hindi
+            : content.video_url_hindi;
+        notification.video_url_english =
+          content.video_type == 1
+            ? baseVideoUrl + content.video_url_english
+            : content.video_url_english;
 
-static async getNotificationList(){
-  const [rows]=await db.query(`SELECT * from tbl_notifications `)
-  return rows;
+        notification.thumbnail_url = content.thumbnail_url
+          ? baseThumbnailUrl + content.thumbnail_url
+          : null;
+       notification.video_type = content.video_type;
+      } else if (contentType === "2" || contentType === "3") {
+        notification.content_url = baseNoteUrl + content.pdf_url;
+      } else if (contentType === "4") {
+        notification.quiz_title = content.title;
+         notification.quiz_id = content.quiz_id_PK ; // or some default placeholder
+      }
+    } else {
+      notification.content_url = null;
+    }
+  }
+  return notifications;
+}
+static async adNotifictionInDb({ title,description }) {
+  const [rows] = await db.query(
+    `INSERT INTO tbl_notifications (title,description,content_type) VALUES (?, ?, ?)`,
+    [title,description,5] 
+  );
+  return rows.insertId > 0;
 }
 }
 module.exports=Users;

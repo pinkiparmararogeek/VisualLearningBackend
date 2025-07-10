@@ -10,8 +10,8 @@ static async isPdfExist({chapter_id,pdf_title}){
     return rows[0];
 }
 
-    static async upload({chapter_id,pdf_title,pdf_url,is_paid}){
-        const [insert]=await db.query(`insert into tbl_chapter_testpapers (chapter_id_FK,pdf_title,	pdf_url,is_paid) values(?,?,?,?)`,[chapter_id,pdf_title,pdf_url,is_paid]);
+    static async upload({chapter_id,pdf_title,pdf_url,is_paid,is_notify}){
+        const [insert]=await db.query(`insert into tbl_chapter_testpapers (chapter_id_FK,pdf_title,	pdf_url,is_paid,is_notify) values(?,?,?,?,?)`,[chapter_id,pdf_title,pdf_url,is_paid,is_notify]);
         return insert.insertId
     }
 
@@ -62,14 +62,13 @@ static async getClassById(classId){
 
 
 
-static async adNotifictionInDb({ className, subjectName, chapterName, pdf_title }) {
+static async adNotifictionInDb({ title,description,uploadTestPaper }) {
   const [rows] = await db.query(
-    `INSERT INTO tbl_notifications (class_name, subject_name, chapter_name, content_title, content_type) VALUES (?, ?, ?, ?, ?)`,
-    [className, subjectName, chapterName, pdf_title,'Test paper']
+    `INSERT INTO tbl_notifications (title,description,content_id,content_type) VALUES (?, ?, ?, ?)`,
+    [title,description,uploadTestPaper,3] 
   );
   return rows.insertId > 0;
 }
-
 
 
 }

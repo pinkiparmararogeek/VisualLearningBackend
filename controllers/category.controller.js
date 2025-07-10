@@ -97,3 +97,32 @@ exports.deleteCategory=async(req,res)=>{
     }
 }
 
+
+
+exports.editCategory=async(req,res)=>{
+  try{
+    const{category_id}=req.params;
+ const icon = req.file?.filename;
+
+    // Get existing data
+    const existingCategory = await Category.getCategoryById(category_id);
+
+    if (!existingCategory) {
+      return res.status(404).json({ status: false, message: "Category not found" });
+    }
+
+   
+const updateCategory=await Category.updateCategory( {
+  category_id,
+  category_name: existingCategory.category_name,
+  category_icon: icon || existingCategory.category_icon
+    })
+if(!updateCategory){
+  return res.status(400).json({status:false,message:"Category icon is not updated."})
+}
+return res.status(200).json({status:true,message:"Category icon is updated successfully."})
+
+  }catch(err){
+    return res.status(500).json({status:false,message:err.message})
+  }
+}

@@ -18,6 +18,7 @@ router.post(
 //delete category
 router.delete("/:id",authenticateUser, categoryController.deleteCategory);
 
-
+//edit Class
+router.put('/edit-category/:category_id',authenticateUser,multerErrorHandler,categoryController.editCategory);
 
 module.exports=router;

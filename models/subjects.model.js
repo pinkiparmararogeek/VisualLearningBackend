@@ -44,8 +44,8 @@ static async updateSubject({subject_id,subject_name}){
 }
 
 
-static async duplicateSubject(subject_id,subject_name){
-  const [rows]=await db.query(`SELECT * from tbl_subjects where subject_name=? AND subject_id_PK !=?`,[subject_name,subject_id]);
+static async duplicateSubject(subject_id,subject_name,classId){
+  const [rows]=await db.query(`SELECT * from tbl_subjects where subject_name=? AND class_id_FK=?  AND subject_id_PK !=?`,[subject_name,classId,subject_id]);
   return rows[0];
 }
 

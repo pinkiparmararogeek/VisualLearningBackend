@@ -38,6 +38,19 @@ static async bannerImagesList(){
   return rows;
 }
 
+
+static async getCategoryById(category_id){
+  const [rows]=await db.query(`SELECT * from  tbl_categories where category_id_PK=?`,[category_id]);
+
+ 
+  return rows[0];
+}
+
+static async updateCategory({category_id,category_name,category_icon}){
+  const [rows]=await db.query(`UPDATE tbl_categories SET category_name = ?, category_icon = ? WHERE category_id_PK = ?`,[category_name,category_icon,category_id]);
+  return rows.affectedRows>0;
+}
+
 }
 
 module.exports=Category;

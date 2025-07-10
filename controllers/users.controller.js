@@ -372,7 +372,7 @@ exports.AddFcmTokenUser=async(req,res)=>{
 
 
 
-exports.sendNotification = async (req, res) => {
+exports.sendNotificationTopic = async (req, res) => {
  const { topic } = req.body;
 
   if (!topic) {
@@ -384,8 +384,7 @@ exports.sendNotification = async (req, res) => {
       title: "Test Notification",
       body: "This is a test from your Node.js backend",
     },
-    // token: fcm_token,
-      topic: 'videos',
+      topic: topic,
   };
 
   try {
@@ -398,6 +397,30 @@ exports.sendNotification = async (req, res) => {
   }
 };
 
+exports.sendNotification = async (req, res) => {
+  const { fcm_token } = req.body;
+
+  if (!fcm_token) {
+    return res.status(400).json({ status: false, message: "fcm_token is required" });
+  }
+
+  const message = {
+    notification: {
+      title: "Test Notification",
+      body: "This is a test from your Node.js backend",
+    },
+    token: fcm_token, // Correct key for sending to a device token
+  };
+
+  try {
+    const response = await admin.messaging().send(message);
+    console.log("Notification sent:", response);
+    res.json({ status: true, message: "Notification sent", response });
+  } catch (error) {
+    console.error("Error sending notification:", error);
+    res.status(500).json({ status: false, message: "Failed to send", error });
+  }
+};
 
 exports.getNotificationList=async(req,res)=>{
   try{
@@ -411,4 +434,74 @@ exports.getNotificationList=async(req,res)=>{
   }
 }
 
+
+
+
+const sendFCMNotification = async (topic, description, title, body) => {
+  if (!topic) {
+    console.error("FCM topic is missing");
+    return false;
+  }
+  const message = {
+    topic: topic,
+    notification: {
+      title,
+      body,
+    },
+    data: {
+     description:description,
+      title: title, 
+    }
+  };
+  try {
+    const response = await admin.messaging().send(message);
+    console.log("Notification sent:", response);
+    return true;
+  } catch (error) {
+    console.error("Error sending notification:", error.message || error);
+    return false;
+  }
+};
+exports.sendGeneralNotification = async (req, res) => {
+  try {
+    const { title, description } = req.body;
+    const topic = 'visuallearning';
+
+    if (!title || !description) {
+      return res.status(400).json({
+        status: false,
+        message: "title and description are required."
+      });
+    }
+
+    const notification = await sendFCMNotification(topic, description, title, description); 
+
+    if (!notification) {
+      return res.status(400).json({
+        status: false,
+        message: "Notification not sent to users."
+      });
+    }
+
+    const addNotificationInDb = await User.adNotifictionInDb({ title, description });
+
+    if (!addNotificationInDb) {
+      return res.status(400).json({
+        status: false,
+        message: "Notification detail not saved in database."
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Notification sent and saved successfully."
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      status: false,
+      message: err.message
+    });
+  }
+};
 

@@ -27,9 +27,19 @@ static async getOrganizationDetail(organization_name = 'Visual Learning') {
 
 
 static async uploadImage({title,imageUrl}){
-  const [rows]=await db.query(`INSERT into tbl_banner_images(	image_url,title) value(?,?)`,[title,imageUrl]);
+  const [rows]=await db.query(`INSERT into tbl_banner_images(	image_url,title) value(?,?)`,[imageUrl,title]);
   return rows.insertId
 };
+//get all banner image list
+static async bannerImagesList(){
+  const [rows]=await db.query(`SELECT * from tbl_banner_images where is_active=1`);
+  return rows;
+}
+
+static async deleteBannerImage(image_id){
+const [rows]=await db.query(`DELETE from tbl_banner_images  where image_id_PK =?`,[image_id]);
+return rows.affectedRows>0;
+}
 
 
 }

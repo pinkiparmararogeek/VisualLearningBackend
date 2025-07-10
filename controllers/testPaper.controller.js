@@ -3,14 +3,11 @@ require("dotenv").config;
 
 const admin=require('../database/firebase')
 
-
-
-const sendNotification = async (topic,className,subjectName,chapterName, pdf_title, body,title,data) => {
+const sendNotification = async (topic, description, pdf_title, title, body) => {
   if (!topic) {
     console.error("FCM topic is missing");
     return false;
   }
-
   const message = {
     topic: topic,
     notification: {
@@ -18,13 +15,10 @@ const sendNotification = async (topic,className,subjectName,chapterName, pdf_tit
       body,
     },
     data: {
-        class:className,
-        subjectname:subjectName,
-        chaptername:chapterName,
-        titlt:pdf_title
+     description:description,
+      title: pdf_title, // Fixed typo from "titlt"
     }
   };
-
   try {
     const response = await admin.messaging().send(message);
     console.log("Notification sent:", response);
@@ -35,11 +29,13 @@ const sendNotification = async (topic,className,subjectName,chapterName, pdf_tit
   }
 };
 
+
 exports.uploadTestPaper=async(req,res)=>{
     try{
-const{chapter_id,pdf_title,is_paid,topic }=req.body;
+const{chapter_id,pdf_title,is_paid,is_notify }=req.body;
 const file = req.file;
 const pdf_url = `${file.filename}`;
+const topic='visuallearning';
 if(!chapter_id||!pdf_title||!pdf_url){
     return res.status(400).json({status:false,message:"chapter_id,pdf_title and pdf_url is required."})
 }
@@ -47,61 +43,49 @@ const isPdfExist=await TestPaper.isPdfExist({chapter_id,pdf_title});
 if(isPdfExist){
     return res.status(400).json({status:false,message:"This pdf title is already exist for this chapter."})
 }
-const uploadTestPaper=await TestPaper.upload({chapter_id,pdf_title,pdf_url,is_paid})
+const uploadTestPaper=await TestPaper.upload({chapter_id,pdf_title,pdf_url,is_paid,is_notify})
 if(!uploadTestPaper){
     return res.status(400).json({status:false,message:"notes pdf not uploade."})
 }
+if(is_notify==2){
+
 //firebase notification start
 const getChapter=await TestPaper.getChapterById(chapter_id);
 if(!getChapter){
     return res.status(400).json({status:false,message:"Chapter not found for this chapter_id."})
 }
 const chapterName=getChapter.chapter_name;
-console.log("chapterName>>>",chapterName)
 const subjectId=getChapter.subject_id_FK;
-
-
 const getSubject=await TestPaper.getSubjectById(subjectId);
 if(!getSubject){
     return res.status(400).json({status:false,message:"Subject not found for this subject id."})
 }
 const subjectName=getSubject.subject_name;
-console.log("subjectName>>>",subjectName)
 const classId=getSubject.class_id_FK;
 const getClass=await TestPaper.getClassById(classId);
-
 if(!getClass){
     return res.status(400).json({status:false,message:"Class not found for this class_id."})
 }
-
 const className=getClass.class_name;
-console.log("className>>>",className)
-const title = `New Notes Added: ${pdf_title}`;
-const body = `${className} > ${subjectName} > ${chapterName} - A new PDF titled "${pdf_title}" has been uploaded.`;
-
+const title = `New Test Paper Added: ${pdf_title}`;
+const body =`The admin has uploaded a new test paper for ${className}, subject- ${subjectName}, chapter- ${chapterName}.`;
+const description = `The admin has uploaded a new note for ${className}, subject- ${subjectName}, chapter- ${chapterName}.`;
 const notification = await sendNotification(
   topic,
-  className,
-  subjectName,
-  chapterName,
+ description,
   pdf_title,
   title,
   body
 );
-
 if(!notification){
     return res.status(400).json({status:false,message:"Notification not send to users."})
 }
-
-const addNotificationInDb=await TestPaper.adNotifictionInDb({className,subjectName,chapterName,pdf_title});
-
+const addNotificationInDb=await TestPaper.adNotifictionInDb({title,description,uploadTestPaper});
 if(!addNotificationInDb){
     return res.status(400).json({status:false,message:"Notification detail not saved in database."})
 }
 //firebase notification ends
-
-
-
+}
 return res.status(200).json({status:true,message:"Test Paper pdf uploaded successfully.",data:uploadTestPaper})
     }
     catch(err){

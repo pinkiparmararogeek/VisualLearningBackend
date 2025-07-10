@@ -70,10 +70,12 @@ const isSubjectExist=await Subject.getSubjectById(subject_id)
 if(!isSubjectExist){
   return res.status(400).json({status:false,message:"Subject not found for this subject_id."})
 }
-const duplicateName=await Subject.duplicateSubject(subject_id,subject_name)
+
+const classId=isSubjectExist.class_id_FK;
+const duplicateName=await Subject.duplicateSubject(subject_id,subject_name,classId)
 if(duplicateName)
 {
-return res.status(400).json({status:false,message:"This subject name is alredy exists."})
+return res.status(400).json({status:false,message:"This subject name is alredy exists for this class."})
 }
 
 const updateSubject=await Subject.updateSubject({

@@ -1,17 +1,13 @@
 const Video=require('../models/video.model');
 require("dotenv").config();
-
-
 const admin=require('../database/firebase')
 
 
-
-const sendNotification = async (topic,className,subjectName,chapterName, video_title, body,title,data) => {
+const sendNotification = async (topic, description, video_title, title, body) => {
   if (!topic) {
     console.error("FCM topic is missing");
     return false;
   }
-
   const message = {
     topic: topic,
     notification: {
@@ -19,13 +15,10 @@ const sendNotification = async (topic,className,subjectName,chapterName, video_t
       body,
     },
     data: {
-        class:className,
-        subjectname:subjectName,
-        chaptername:chapterName,
-        titlt:video_title
+     description:description,
+      title: video_title, // Fixed typo from "titlt"
     }
   };
-
   try {
     const response = await admin.messaging().send(message);
     console.log("Notification sent:", response);
@@ -36,14 +29,11 @@ const sendNotification = async (topic,className,subjectName,chapterName, video_t
   }
 };
 
-
-
-
 exports.uploadVideo = async (req, res) => {
   try {
-    const { chapter_id, video_title, description, duration, video_type, is_paid ,topic} = req.body;
+    const { chapter_id, video_title, description, duration, video_type, is_paid ,is_notify} = req.body;
     const files = req.files;
-
+const topic='visuallearning';
     if (!chapter_id || !video_title || !video_type) {
       return res.status(400).json({
         message: 'chapter_id, video_title, and video_type are required'
@@ -86,7 +76,6 @@ exports.uploadVideo = async (req, res) => {
           message: 'At least one YouTube URL (video hindi or video english) is required.'
         });
       }
-
       // Check if files were mistakenly uploaded
       if (files?.video_hindi || files?.video_english) {
         return res.status(400).json({
@@ -94,10 +83,8 @@ exports.uploadVideo = async (req, res) => {
           message: 'Video files are not allowed when video type is youtube url. Please provide YouTube URLs.'
         });
       }
-
       video_hindi = req.body.video_hindi;
       video_english = req.body.video_english;
-
     } else {
       return res.status(400).json({
         message: 'Invalid video type. Must be 1 (upload) or 2 (YouTube)'
@@ -114,7 +101,8 @@ exports.uploadVideo = async (req, res) => {
       thumbnail_url,
       duration,
       video_type,
-      is_paid
+      is_paid,
+      is_notify
     });
 
     if (!uploadVideo) {
@@ -125,6 +113,9 @@ exports.uploadVideo = async (req, res) => {
 
 
 //firebase notification start
+if(is_notify==2){
+
+
 const getChapter=await Video.getChapterById(chapter_id);
 if(!getChapter){
     return res.status(400).json({status:false,message:"Chapter not found for this chapter_id."})
@@ -132,14 +123,11 @@ if(!getChapter){
 const chapterName=getChapter.chapter_name;
 console.log("chapterName>>>",chapterName)
 const subjectId=getChapter.subject_id_FK;
-
-
 const getSubject=await Video.getSubjectById(subjectId);
 if(!getSubject){
     return res.status(400).json({status:false,message:"Subject not found for this subject id."})
 }
 const subjectName=getSubject.subject_name;
-console.log("subjectName>>>",subjectName)
 const classId=getSubject.class_id_FK;
 const getClass=await Video.getClassById(classId);
 
@@ -148,32 +136,29 @@ if(!getClass){
 }
 
 const className=getClass.class_name;
-console.log("className>>>",className)
-const title = `New Notes Added: ${video_title}`;
-const body = `${className} > ${subjectName} > ${chapterName} - A new PDF titled "${video_title}" has been uploaded.`;
+const title = `New Video Added: ${video_title}`;
+const body =`The admin has uploaded a new note for ${className}, subject- ${subjectName}, chapter- ${chapterName}.`;
 
+const description = `The admin has uploaded a new note for ${className}, subject- ${subjectName}, chapter- ${chapterName}.`;
 const notification = await sendNotification(
   topic,
-  className,
-  subjectName,
-  chapterName,
+ description,
   video_title,
   title,
   body
 );
-
 if(!notification){
     return res.status(400).json({status:false,message:"Notification not send to users."})
 }
-
-const addNotificationInDb=await Video.adNotifictionInDb({className,subjectName,chapterName,video_title});
-
+const addNotificationInDb=await Video.adNotifictionInDb({title,description,uploadVideo});
 if(!addNotificationInDb){
     return res.status(400).json({status:false,message:"Notification detail not saved in database."})
 }
 //firebase notification ends
 
-    res.status(201).json({ status: true, message: 'Video uploaded successfully' });
+}
+
+   return res.status(201).json({ status: true, message: 'Video uploaded successfully' });
 
   } catch (err) {
     console.error(err);

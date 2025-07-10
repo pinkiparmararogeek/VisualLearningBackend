@@ -30,9 +30,14 @@ router.post("/fcm-token-user",authenticateUser,userController.AddFcmTokenUser)
 
 
 //testing firebase notification
-router.post("/notification",userController.sendNotification)
+router.post("/test-notification",userController.sendNotification);
 
+//testing firebase notification topic
+router.post("/test-notification-topic",userController.sendNotificationTopic);
 
 //get notification list
-router.get('/notification-list',userController.getNotificationList)
+router.get('/notification-list',authenticateUser,userController.getNotificationList);
+
+//send general notification
+router.post('/general-notification',authenticateUser,userController.sendGeneralNotification);
 module.exports=router;

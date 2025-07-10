@@ -6,9 +6,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const admin=require('../database/firebase')
 
-
-
-const sendNotification = async (topic,className,subjectName,chapterName, quizTitle, body,title,data) => {
+const sendNotification = async (topic, description, quizTitle, title, body) => {
   if (!topic) {
     console.error("FCM topic is missing");
     return false;
@@ -21,13 +19,10 @@ const sendNotification = async (topic,className,subjectName,chapterName, quizTit
       body,
     },
     data: {
-        class:className,
-        subjectname:subjectName,
-        chaptername:chapterName,
-        titlt:quizTitle
+     description:description,
+      title: quizTitle, 
     }
   };
-
   try {
     const response = await admin.messaging().send(message);
     console.log("Notification sent:", response);
@@ -40,7 +35,6 @@ const sendNotification = async (topic,className,subjectName,chapterName, quizTit
 
 
 
-
 exports.createQuiz = [
   upload.single("quiz_excelsheet"),
   async (req, res) => {
@@ -48,7 +42,8 @@ exports.createQuiz = [
     const chapterId=req.body.chapterId;
     const fileBuffer = req.file?.buffer;
 const is_paid=req.body.is_paid;
-const topic=req.body.topic;
+const is_notify=req.body.is_notify;
+const topic='visuallearning';
     console.log("quizTitle",quizTitle)
     console.log("fileBuffer",fileBuffer)
     if (!quizTitle || !fileBuffer||!chapterId) {
@@ -63,7 +58,7 @@ const topic=req.body.topic;
           message: "This Quiz title already exists. Quiz title must be unique.",
         });
       }
-      const quizId = await Quiz.insertQuiz({quizTitle,chapterId,is_paid});
+      const quizId = await Quiz.insertQuiz({quizTitle,chapterId,is_paid,is_notify});
       if (!quizId) {
         return res.status(400).json({ status: false, message: "Quiz not added." });
       }
@@ -75,6 +70,8 @@ if(!addQuizQuestions){
   return res.status(400).json({status:false,message:"Quiz question not added."})
 }
 
+if(is_notify==2){
+
 //firebase notification start
 const getChapter=await Quiz.getChapterById(chapterId);
 if(!getChapter){
@@ -83,14 +80,11 @@ if(!getChapter){
 const chapterName=getChapter.chapter_name;
 console.log("chapterName>>>",chapterName)
 const subjectId=getChapter.subject_id_FK;
-
-
 const getSubject=await Quiz.getSubjectById(subjectId);
 if(!getSubject){
     return res.status(400).json({status:false,message:"Subject not found for this subject id."})
 }
 const subjectName=getSubject.subject_name;
-console.log("subjectName>>>",subjectName)
 const classId=getSubject.class_id_FK;
 const getClass=await Quiz.getClassById(classId);
 
@@ -99,30 +93,27 @@ if(!getClass){
 }
 
 const className=getClass.class_name;
-console.log("className>>>",className)
-const title = `New Notes Added: ${quizTitle}`;
-const body = `${className} > ${subjectName} > ${chapterName} - A new PDF titled "${quizTitle}" has been uploaded.`;
+const title = `New Quiz Added: ${quizTitle}`;
+const body =`The admin has uploaded a new note for ${className}, subject- ${subjectName}, chapter- ${chapterName}.`;
 
+const description = `The admin has uploaded a new note for ${className}, subject- ${subjectName}, chapter- ${chapterName}.`;
 const notification = await sendNotification(
   topic,
-  className,
-  subjectName,
-  chapterName,
+ description,
   quizTitle,
   title,
   body
 );
-
 if(!notification){
     return res.status(400).json({status:false,message:"Notification not send to users."})
 }
-
-const addNotificationInDb=await Quiz.adNotifictionInDb({className,subjectName,chapterName,quizTitle});
-
+const addNotificationInDb=await Quiz.adNotifictionInDb({title,description,quizId});
 if(!addNotificationInDb){
     return res.status(400).json({status:false,message:"Notification detail not saved in database."})
 }
+//firebase notification ends
 
+}
 
 
       return res.json({

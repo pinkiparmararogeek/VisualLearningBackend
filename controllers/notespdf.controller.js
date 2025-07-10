@@ -3,8 +3,7 @@ require("dotenv").config;
 const admin=require('../database/firebase')
 
 
-
-const sendNotification = async (topic,className,subjectName,chapterName, pdf_title, body,title,data) => {
+const sendNotification = async (topic, description, pdf_title, title, body) => {
   if (!topic) {
     console.error("FCM topic is missing");
     return false;
@@ -17,13 +16,10 @@ const sendNotification = async (topic,className,subjectName,chapterName, pdf_tit
       body,
     },
     data: {
-        class:className,
-        subjectname:subjectName,
-        chaptername:chapterName,
-        titlt:pdf_title
+     description:description,
+      title: pdf_title, // Fixed typo from "titlt"
     }
   };
-
   try {
     const response = await admin.messaging().send(message);
     console.log("Notification sent:", response);
@@ -37,8 +33,10 @@ const sendNotification = async (topic,className,subjectName,chapterName, pdf_tit
 
 exports.uploadNotesPdf=async(req,res)=>{
     try{
-const{chapter_id,pdf_title,is_paid,topic}=req.body;
-console.log('topic>>>>',topic)
+const{chapter_id,pdf_title,is_paid,is_notify}=req.body;
+
+const topic='visuallearning';
+
 const file = req.file;
 const pdf_url = `${file.filename}`;
 if(!chapter_id||!pdf_title||!pdf_url){
@@ -49,11 +47,16 @@ const isPdfExist=await Notes.isPdfExist({chapter_id,pdf_title});
 if(isPdfExist){
     return res.status(400).json({status:false,message:"This pdf title is already exist for this chapter."})
 }
-const uploadNotes=await Notes.upload({chapter_id,pdf_title,pdf_url,is_paid})
+const uploadNotes=await Notes.upload({chapter_id,pdf_title,pdf_url,is_paid,is_notify})
 
 if(!uploadNotes){
     return res.status(400).json({status:false,message:"notes pdf not uploade."})
 }
+
+
+
+if(is_notify==2){
+
 //firebase notification start
 const getChapter=await Notes.getChapterById(chapter_id);
 if(!getChapter){
@@ -62,14 +65,11 @@ if(!getChapter){
 const chapterName=getChapter.chapter_name;
 console.log("chapterName>>>",chapterName)
 const subjectId=getChapter.subject_id_FK;
-
-
 const getSubject=await Notes.getSubjectById(subjectId);
 if(!getSubject){
     return res.status(400).json({status:false,message:"Subject not found for this subject id."})
 }
 const subjectName=getSubject.subject_name;
-console.log("subjectName>>>",subjectName)
 const classId=getSubject.class_id_FK;
 const getClass=await Notes.getClassById(classId);
 
@@ -78,30 +78,28 @@ if(!getClass){
 }
 
 const className=getClass.class_name;
-console.log("className>>>",className)
 const title = `New Notes Added: ${pdf_title}`;
-const body = `${className} > ${subjectName} > ${chapterName} - A new PDF titled "${pdf_title}" has been uploaded.`;
+const body =`The admin has uploaded a new note for ${className}, subject- ${subjectName}, chapter- ${chapterName}.`;
 
+const description = `The admin has uploaded a new note for ${className}, subject- ${subjectName}, chapter- ${chapterName}.`;
 const notification = await sendNotification(
   topic,
-  className,
-  subjectName,
-  chapterName,
+ description,
   pdf_title,
   title,
   body
 );
-
 if(!notification){
     return res.status(400).json({status:false,message:"Notification not send to users."})
 }
-
-const addNotificationInDb=await Notes.adNotifictionInDb({className,subjectName,chapterName,pdf_title});
-
+const addNotificationInDb=await Notes.adNotifictionInDb({title,description,uploadNotes});
 if(!addNotificationInDb){
     return res.status(400).json({status:false,message:"Notification detail not saved in database."})
 }
 //firebase notification ends
+
+}
+
 return res.status(200).json({status:true,message:"Notes pdf uploaded successfully.",data:uploadNotes})
     }
     catch(err){

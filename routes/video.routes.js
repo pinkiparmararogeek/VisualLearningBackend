@@ -10,13 +10,9 @@ router.post('/upload-video',authenticateUser, upload.fields([
   { name: 'video_english', maxCount: 1 },
   { name: 'thumbnail', maxCount: 1 }
 ]), videoController.uploadVideo);
-
 //get all video list by chapter 
 router.get('/:chapter_id',authenticateUser,videoController.videoListByChapter)
-
-
-
-//get all video list by chapter 
+//get all video list by chapter  and user id
 router.get('/video-list/:chapter_id',authenticateUser,videoController.videoListByChapterAndUserId)
 //delete video API
 router.delete("/:video_id",authenticateUser,videoController.deleteVideo)
@@ -26,8 +22,6 @@ router.put('/update-video/:video_id',authenticateUser,upload.fields([
   { name:'video_english', maxCount: 1 },
   { name:'thumbnail', maxCount: 1 }
 ]), videoController.editVideo);
-
-
 //search APi
 router.post("/search", authenticateUser,videoController.searchContent);
 module.exports=router;

@@ -69,9 +69,6 @@ const updatedList = getFavouriteList.map(video => ({
     : null
 }));
 
-
-
-
         return res.status(200).json({status:true,message:"Favorite video list found successfully.",data:updatedList})
     }catch(err){
         return res.status(500).json({status:false,message:err.message})

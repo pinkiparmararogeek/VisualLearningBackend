@@ -2,12 +2,12 @@ const db=require("../database/db")
 
 class Video{
 
-static async uploadVideo({chapter_id, video_title,video_hindi, video_english, description, thumbnail_url, duration,video_type,is_paid}){
+static async uploadVideo({chapter_id, video_title,video_hindi, video_english, description, thumbnail_url, duration,video_type,is_paid,is_notify}){
     const [rows]=await db.query(`
       INSERT INTO tbl_chapter_videos 
-        (chapter_id_FK, video_title, video_url_hindi,video_url_english, description, thumbnail_url, duration,video_type,is_paid)
-      VALUES (?, ?, ?, ?, ?, ?,?,?,?)`,
-      [chapter_id, video_title, video_hindi,video_english, description, thumbnail_url, duration,video_type,is_paid]
+        (chapter_id_FK, video_title, video_url_hindi,video_url_english, description, thumbnail_url, duration,video_type,is_paid,is_notify)
+      VALUES (?, ?, ?, ?, ?, ?,?,?,?,?)`,
+      [chapter_id, video_title, video_hindi,video_english, description, thumbnail_url, duration,video_type,is_paid,is_notify]
     );
 return rows.insertId;
 }
@@ -18,11 +18,26 @@ static async isVideoxist({chapter_id,video_title}){
 }
 
 
-static async getVideoList(chapter_id){
-  const[rows]=await db.query(`SELECT * from tbl_chapter_videos where chapter_id_FK=?`,[chapter_id]);
+// static async getVideoList(chapter_id){
+//   const[rows]=await db.query(`SELECT * from tbl_chapter_videos where chapter_id_FK=?`,[chapter_id]);
+//   return rows;
+// }
+
+static async getVideoList(chapter_id) {
+  const [rows] = await db.query(`
+    SELECT 
+      v.*, 
+      c.chapter_name, 
+      s.subject_name, 
+      cl.class_name
+    FROM tbl_chapter_videos v
+    JOIN tbl_chapter c ON v.chapter_id_FK = c.chapter_id_PK
+    JOIN tbl_subjects s ON c.subject_id_FK = s.subject_id_PK
+    JOIN tbl_classes cl ON s.class_id_FK = cl.class_id_PK
+    WHERE v.chapter_id_FK = ?
+  `, [chapter_id]);
   return rows;
 }
-
 
 
 static async deleteVideo(video_id){
@@ -131,10 +146,11 @@ static async getClassById(classId){
 
 
 
-static async adNotifictionInDb({ className, subjectName, chapterName, video_title }) {
+
+static async adNotifictionInDb({title,description,uploadVideo}) {
   const [rows] = await db.query(
-    `INSERT INTO tbl_notifications (class_name, subject_name, chapter_name, content_title, content_type) VALUES (?, ?, ?, ?, ?)`,
-    [className, subjectName, chapterName, video_title,'Video']
+    `INSERT INTO tbl_notifications (title,description,content_id,content_type) VALUES (?, ?, ?, ?)`,
+    [title,description,uploadVideo,1] 
   );
   return rows.insertId > 0;
 }

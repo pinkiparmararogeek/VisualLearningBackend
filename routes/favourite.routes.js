@@ -10,7 +10,9 @@ router.post('/',authenticateUser,favouriteController.markFavourite)
 //API for remove as a favourite video
 router.post('/remove-favourite',authenticateUser,favouriteController.removeFavourite)
 
-
-// get allfavourite video list by user id
+//get allfavourite video list by user id
 router.get('/favourite-video/:user_id',authenticateUser,favouriteController.getFavouriteVideosByUserId)
+
+
+
 module.exports=router;
