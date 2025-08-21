@@ -191,7 +191,7 @@ static async getNotificationList() {
   }
 
 
-  // Assuming notifications is an array of objects from DB
+  // Assuming notifications is an array of objects from DB test
 notifications = notifications.map(notification => {
     notification.created_at = moment(notification.created_at)
         .add(5, 'hours')
