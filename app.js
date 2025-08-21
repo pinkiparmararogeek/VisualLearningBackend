@@ -23,7 +23,7 @@ app.use(bodyParser.json());
 const cors = require('cors');
 app.use(cors());
 // Routes
-app.get('/status', (req, res) => {
+app.get('/status',(req, res) => {
   res.send('Server is Running!');
 });
 
@@ -44,4 +44,8 @@ app.use('/api/organization',organization)
 app.use("/api/subscription-plan",subscriptionPlanRoutes)
 app.use('/api/favourite',favouriteRoutes)
 // Start server
+
+
+
+
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

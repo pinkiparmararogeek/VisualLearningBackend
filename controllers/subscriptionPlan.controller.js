@@ -232,3 +232,17 @@ async function handleExpiredSubscriptions() {
       return res.status(500).json({status:false,message:err.message});
     }
   }
+
+
+  exports.cancelPlanByUser=async(req,res)=>{
+    try{
+        const{user_id}=req.params;
+        const cancelPlanByUser=await SubscriptionPlan.cancelPlanByUser(user_id);
+        if(!cancelPlanByUser){
+            return res.status(400).json({status:false,message:"Subscription plan not cancelled."})
+        }
+        return res.status(200).json({status:true,message:"Subscription plan cancelled successfully.",data:cancelPlanByUser})
+    }catch(err){
+        return res.status(500).json({status:false,message:err.message})
+    }
+  } 

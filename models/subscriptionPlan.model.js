@@ -105,6 +105,15 @@ static async updateSubscriptionStatus(plan_id, status){
     );
     return result;
 }
+
+
+static async cancelPlanByUser(id){
+  const [result] = await db.query(
+    "UPDATE tbl_user_subscriptions SET is_active = 2 WHERE subscription_id_PK = ?",
+    [id]
+  );
+  return result.affectedRows > 0;
+}
 }
 
 

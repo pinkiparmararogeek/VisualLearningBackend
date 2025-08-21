@@ -51,20 +51,44 @@ const topic='visuallearning';
     }
 
     try {
-      const isQuizExist = await Quiz.isQuizExist(quizTitle);
+     
+      const workbook = XLSX.read(fileBuffer, { type: "buffer" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet);
+
+
+
+// Validate Excel columns and rows
+for (let i = 0; i < rows.length; i++) {
+  const row = rows[i];
+  if (
+    !row.QuestionNo ||
+    !row.Question ||
+    !row.OptionA ||
+    !row.OptionB ||
+    !row.OptionC ||
+    !row.OptionD ||
+    (row.RightAnswer === undefined || row.RightAnswer === null) ||
+    !row.Explanation
+  ) {
+    return res.status(400).json({
+      status: false,
+      message: `Please upload the Excel sheet in the same format as the sample provided. Column ${i + 2} is missing required fields.`,
+    });
+  }
+}
+
+ const isQuizExist = await Quiz.isQuizExist(quizTitle,chapterId);
       if (isQuizExist) {
         return res.status(400).json({
           status: false,
-          message: "This Quiz title already exists. Quiz title must be unique.",
+          message: "This Quiz title already exists for this chapter. Quiz title must be unique.",
         });
       }
       const quizId = await Quiz.insertQuiz({quizTitle,chapterId,is_paid,is_notify});
       if (!quizId) {
         return res.status(400).json({ status: false, message: "Quiz not added." });
       }
-      const workbook = XLSX.read(fileBuffer, { type: "buffer" });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(sheet);
      const addQuizQuestions= await Quiz.insertQuizQuestions(quizId, rows,chapterId);
 if(!addQuizQuestions){
   return res.status(400).json({status:false,message:"Quiz question not added."})

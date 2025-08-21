@@ -26,4 +26,7 @@ router.get("/subscription-list",authenticateUser,subscriptionPlanController.getS
 
 //active,in-active plan
 router.post("/active-in-active",authenticateUser,subscriptionPlanController.planActiveInActive)
+
+//cancel plan by user
+router.get("/cancel-plan/:id",subscriptionPlanController.cancelPlanByUser)
 module.exports=router;

@@ -4,16 +4,16 @@ require('dotenv').config();
 
 exports.markFavourite=async(req,res)=>{
     try{
-const{user_id ,video_id}=req.body;
+const{user_id ,video_id,language_type}=req.body;
 
-if(!user_id||!video_id){
-    return res.status(400).json({status:"false",message:"user_id and video_id is required."})
+if(!user_id||!video_id||!language_type){
+    return res.status(400).json({status:"false",message:"user_id and video_id, language_type is required."})
 }
-const isAlreadyFavorite=await  Favourite.isFavouriteExist(user_id ,video_id);
+const isAlreadyFavorite=await  Favourite.isFavouriteExist(user_id ,video_id,language_type);
 if(isAlreadyFavorite){
-    return res.status(400).json({status:false,message:"This video is alredy marked as a favourite."})
+    return res.status(400).json({status:false,message:"This video is already marked as a favourite."})
 }
-const markFavorite=await  Favourite.markFavourite(user_id ,video_id);
+const markFavorite=await  Favourite.markFavourite(user_id ,video_id,language_type);
 if(!markFavorite){
     return res.status(400).json({status:false,message:"Video not marked as a favourite."})
 }

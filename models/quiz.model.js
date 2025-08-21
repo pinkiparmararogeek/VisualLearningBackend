@@ -3,8 +3,8 @@ const db=require("../database/db")
 
 class Quiz{
 
-static async isQuizExist(quizTitle){
-    const [rows]=await db.query(`Select * from tbl_quizzes where title=?`,[quizTitle]);
+static async isQuizExist(quizTitle,chapterId){
+    const [rows]=await db.query(`Select * from tbl_quizzes where title=? AND chapter_id_FK=?`,[quizTitle,chapterId]);
     return rows[0];
 }
 

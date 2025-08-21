@@ -1,5 +1,7 @@
 const db = require('../database/db');
 require("dotenv").config();
+const moment = require('moment-timezone');
+
 class Users{
 static async getUserList({ limit, offset }) {
   const [users] = await db.query(
@@ -125,7 +127,7 @@ static async getNotificationList() {
   const baseVideoUrl = `${process.env.BASE_URL}/uploads/videos/`;
   const baseThumbnailUrl = `${process.env.BASE_URL}/uploads/thumbnails/`;
   const baseNoteUrl = `${process.env.BASE_URL}/uploads/notes/`;
-  const [notifications] = await db.query(`SELECT * FROM tbl_notifications`);
+  let [notifications] = await db.query(`SELECT * FROM tbl_notifications`);
   for (const notification of notifications) {
     const contentId = notification.content_id;
     const contentType = notification.content_type;
@@ -187,6 +189,16 @@ static async getNotificationList() {
       notification.content_url = null;
     }
   }
+
+
+  // Assuming notifications is an array of objects from DB
+notifications = notifications.map(notification => {
+    notification.created_at = moment(notification.created_at)
+        .add(5, 'hours')
+        .add(30, 'minutes')
+        .format('YYYY-MM-DD HH:mm:ss');
+    return notification;
+});
   return notifications;
 }
 static async adNotifictionInDb({ title,description }) {

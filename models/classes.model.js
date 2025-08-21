@@ -38,46 +38,88 @@ static async deleteClass(class_id) {
 
 
 //get  all subject with chapter by class Name
-static async classDetails(class_id){
+// static async classDetails(class_id){
 
 
 
-      const [rows] = await db.query(`
-      SELECT 
-        c.class_name,
-        s.subject_id_PK AS subject_id,
-        s.subject_name,
-        ch.chapter_id_PK AS chapter_id,
-        ch.chapter_name
-        FROM tbl_classes c
-      JOIN tbl_subjects s ON s.class_id_FK = c.class_id_PK
-      LEFT JOIN tbl_chapter ch ON ch.subject_id_FK = s.subject_id_PK
-      WHERE c.class_id_PK = ?
-    `, [class_id]);
+//       const [rows] = await db.query(`
+//       SELECT 
+//         c.class_name,
+//         s.subject_id_PK AS subject_id,
+//         s.subject_name,
+//         ch.chapter_id_PK AS chapter_id,
+//         ch.chapter_name
+//         FROM tbl_classes c
+//       JOIN tbl_subjects s ON s.class_id_FK = c.class_id_PK
+//       LEFT JOIN tbl_chapter ch ON ch.subject_id_FK = s.subject_id_PK
+//       WHERE c.class_id_PK = ?
+//     `, [class_id]);
 
-    const subjectMap = {};
+//     const subjectMap = {};
 
-    rows.forEach(row => {
-      if (!subjectMap[row.subject_id]) {
-        subjectMap[row.subject_id] = {
-          subject_id: row.subject_id,
-          subject_name: row.subject_name,
-          chapters: []
-        };
-      }
-      if (row.chapter_id) {
-        subjectMap[row.subject_id].chapters.push({
-          chapter_id: row.chapter_id,
-          chapter_name: row.chapter_name,
-          language_type: row.language_type
-        });
-      }
-    });
-    const result = {
-      class_id,
-      subjects: Object.values(subjectMap)
-    };
-    return result;
+//     rows.forEach(row => {
+//       if (!subjectMap[row.subject_id]) {
+//         subjectMap[row.subject_id] = {
+//           subject_id: row.subject_id,
+//           subject_name: row.subject_name,
+//           chapters: []
+//         };
+//       }
+//       if (row.chapter_id) {
+//         subjectMap[row.subject_id].chapters.push({
+//           chapter_id: row.chapter_id,
+//           chapter_name: row.chapter_name,
+//           language_type: row.language_type
+//         });
+//       }
+//     });
+//     const result = {
+//       class_id,
+//       subjects: Object.values(subjectMap)
+//     };
+//     return result;
+// }
+
+
+
+static async classDetails(class_id) {
+  const [rows] = await db.query(`
+    SELECT 
+      c.class_name,
+      s.subject_id_PK AS subject_id,
+      s.subject_name,
+      ch.chapter_id_PK AS chapter_id,
+      ch.chapter_name
+    FROM tbl_classes c
+    JOIN tbl_subjects s ON s.class_id_FK = c.class_id_PK
+    LEFT JOIN tbl_chapter ch ON ch.subject_id_FK = s.subject_id_PK
+    WHERE c.class_id_PK = ?
+    ORDER BY s.subject_id_PK ASC, ch.chapter_id_PK ASC
+  `, [class_id]);
+
+  const subjectMap = {};
+
+  rows.forEach(row => {
+    if (!subjectMap[row.subject_id]) {
+      subjectMap[row.subject_id] = {
+        subject_id: row.subject_id,
+        subject_name: row.subject_name,
+        chapters: []
+      };
+    }
+    if (row.chapter_id) {
+      subjectMap[row.subject_id].chapters.push({
+        chapter_id: row.chapter_id,
+        chapter_name: row.chapter_name
+      });
+    }
+  });
+
+  const result = {
+    class_id,
+    subjects: Object.values(subjectMap)
+  };
+  return result;
 }
 
 static async getClassById(class_id){
