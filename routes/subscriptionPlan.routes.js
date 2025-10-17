@@ -18,7 +18,7 @@ router.get('/plan-list',authenticateUser,subscriptionPlanController.getPlansList
 router.post('/purchase-plan',authenticateUser,subscriptionPlanController.purchasePlan)
 
 //get user subscription detail
-router.get("/user-subcription/:user_id",authenticateUser,subscriptionPlanController.getUserSUbscriptionDetail)
+router.get("/user-subcription/:user_id",subscriptionPlanController.getUserSUbscriptionDetail)
 
 
 //gel all subscription list
@@ -28,5 +28,10 @@ router.get("/subscription-list",authenticateUser,subscriptionPlanController.getS
 router.post("/active-in-active",authenticateUser,subscriptionPlanController.planActiveInActive)
 
 //cancel plan by user
-router.get("/cancel-plan/:id",subscriptionPlanController.cancelPlanByUser)
+router.get("/cancel-plan/:id",authenticateUser,subscriptionPlanController.cancelPlanByUser)
+
+
+
+router.post('/generate-order-id',authenticateUser,subscriptionPlanController.generateOrderId);
+
 module.exports=router;

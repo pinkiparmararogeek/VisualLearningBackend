@@ -40,4 +40,6 @@ router.get('/notification-list',authenticateUser,userController.getNotificationL
 
 //send general notification
 router.post('/general-notification',authenticateUser,userController.sendGeneralNotification);
+
+
 module.exports=router;

@@ -1,15 +1,15 @@
 const  SubscriptionPlan=require("../models/subscriptionPlan.model")
-
+const Razorpay = require("razorpay");
 const User=require("../models/users.model")
 exports.addPlan=async(req,res)=>{
     try{
-const{plan_name,price,offer_price,duration_days	}=req.body;
+const{plan_name,price,offer_price,validity_unit,validity_count	}=req.body;
 
 // Required field check
-if (!plan_name || !price || !duration_days) {
+if (!plan_name || !price || !validity_unit||!validity_count) {
   return res.status(400).json({
     status: false,
-    message: "plan_name, price, and duration_days are required.",
+    message: "plan_name, price, and validity_unit,validity_count are required.",
   });
 }
 
@@ -38,12 +38,6 @@ if (offer_price) {
   }
 }
 
-  if (isNaN(duration_days) || Number(duration_days) <= 0) {
-    return res.status(400).json({
-      status: false,
-      message: "Please enter a valid plan duration.",
-    });
-  }
 
 
 const isPlanExist=await SubscriptionPlan.isPlanExist(plan_name)
@@ -51,7 +45,7 @@ if(isPlanExist)
 {
     return res.status(400).json({status:false,message:"A plan with this name already exists. Please use a unique plan name."})
 }
-const addPlan=await SubscriptionPlan.addPlan({plan_name,price,offer_price,duration_days	})
+const addPlan=await SubscriptionPlan.addPlan({plan_name,price,offer_price,validity_unit	,validity_count})
 if(!addPlan){
     return res.status(400).json({status:false,message:"Subscription plan not added."})
 }
@@ -108,8 +102,26 @@ if(!getPlanById){
     const startDate = new Date();
 console.log("startDate>>>",startDate);
     // 3. Calculate end date
-    const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + getPlanById.duration_days);
+     const endDate = new Date(startDate);
+
+    switch (getPlanById.validity_unit) {
+      case 1: // days
+        endDate.setDate(endDate.getDate() + getPlanById.validity_count);
+        break;
+      case 2: // months
+        endDate.setMonth(endDate.getMonth() + getPlanById.validity_count);
+        break;
+      case 3: // years
+        endDate.setFullYear(endDate.getFullYear() + getPlanById.validity_count);
+        break;
+      default:
+        return res.status(400).json({
+          status: false,
+          message: "Invalid validity unit for this plan.",
+        });
+    }
+
+    console.log("endDate>>>",endDate);
 const purchasePlan=await  SubscriptionPlan.purchasePlan({plan_id,user_id,startDate,endDate})
 if(!purchasePlan){
     return res.status(400).json({status:false,message:"Subscription plan not purchased."})
@@ -234,15 +246,62 @@ async function handleExpiredSubscriptions() {
   }
 
 
-  exports.cancelPlanByUser=async(req,res)=>{
-    try{
-        const{user_id}=req.params;
-        const cancelPlanByUser=await SubscriptionPlan.cancelPlanByUser(user_id);
-        if(!cancelPlanByUser){
-            return res.status(400).json({status:false,message:"Subscription plan not cancelled."})
+  exports.cancelPlanByUser = async (req, res) => {
+    try {
+        const user_id= req.params.id;
+     
+        const cancelPlanByUser = await SubscriptionPlan.cancelPlanByUser(user_id);
+
+        if (!cancelPlanByUser) {
+            return res.status(400).json({ status: false, message: "Subscription plan expired or cancelled alredy." });
         }
-        return res.status(200).json({status:true,message:"Subscription plan cancelled successfully.",data:cancelPlanByUser})
-    }catch(err){
-        return res.status(500).json({status:false,message:err.message})
+
+        return res.status(200).json({ status: true, message: "Subscription plan cancelled successfully.", data: cancelPlanByUser });
+    } catch (err) {
+        return res.status(500).json({ status: false, message: err.message });
     }
-  } 
+}
+
+
+
+
+
+
+exports.generateOrderId = async (req, res) => {
+  try {
+    const {amount } = req.body;
+
+
+
+    if (!amount ) {
+      return res
+        .status(400)
+        .json({ status: false, message: "amount are required." });
+    }
+
+    const instance = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+
+const options = {
+  amount: amount * 100, // convert ₹ to paise
+  currency: "INR",
+  receipt: "receipt_" + Date.now(),
+};
+    const order = await instance.orders.create(options);
+
+    if (!order) {
+      return res.status(500).json({ status: false, message: "Failed to create order." });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Order created successfully.",
+      data: order,
+    });
+  } catch (err) {
+    console.error("Razorpay Error:", err);
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};

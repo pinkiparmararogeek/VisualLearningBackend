@@ -6,8 +6,8 @@ class SubscriptionPlan{
 
 
 
-static async addPlan({plan_name,price,offer_price,duration_days	}){
-    const[rows]=await db.query(`INSERT into tbl_subscription_plans(plan_name,price,offer_price,duration_days) values(?,?,?,?)`,[plan_name,price,offer_price,duration_days]);
+static async addPlan({plan_name,price,offer_price,validity_unit	,validity_count	}){
+    const[rows]=await db.query(`INSERT into tbl_subscription_plans(plan_name,price,offer_price,validity_unit,validity_count) values(?,?,?,?,?)`,[plan_name,price,offer_price,validity_unit	,validity_count]);
     return rows.insertId;
 }
 
@@ -55,7 +55,7 @@ static async purchasePlan({ plan_id, user_id, startDate, endDate }) {
 
 static async getUserSubscriptionDetail(user_id) {
   const [rows] = await db.query(`
-    SELECT s.*, p.plan_name, p.price, p.offer_price, p.duration_days
+    SELECT s.*, p.plan_name, p.price, p.offer_price, p.validity_unit,p.validity_count
     FROM tbl_user_subscriptions AS s
     LEFT JOIN tbl_subscription_plans AS p ON s.subscription_plan_id_FK = p.plan_id_PK
     WHERE s.user_id_FK = ?
@@ -105,15 +105,22 @@ static async updateSubscriptionStatus(plan_id, status){
     );
     return result;
 }
+static async cancelPlanByUser(user_id) {
+    const [result] = await db.query(
+        "UPDATE tbl_user_subscriptions SET is_active = 3 WHERE user_id_FK = ? AND is_active = 1",
+        [user_id]
+    );
 
-
-static async cancelPlanByUser(id){
-  const [result] = await db.query(
-    "UPDATE tbl_user_subscriptions SET is_active = 2 WHERE subscription_id_PK = ?",
-    [id]
-  );
-  return result.affectedRows > 0;
+    if (result.affectedRows > 0) {
+        // Update user's subscription status to inactive
+        const [cancelPlan] = await db.query(
+            "UPDATE tbl_users SET is_subscribe = 3, expiry_date = NULL WHERE user_id_PK = ?",
+            [user_id]
+        );
+    }
+    return result.affectedRows > 0;
 }
+
 }
 
 
